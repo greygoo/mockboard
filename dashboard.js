@@ -91,14 +91,19 @@ function run_stable() {
   clearInterval(secure_facilitiesInterval)
   secure_facilitiesInterval = setInterval(function() {
     if (marker) {
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: '#' })
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200" })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478" })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000" })
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: unescape("%u2302") })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'blue', char: unescape("%u2302") }) 
     }
     else {
       secure_facilities.clearMarkers()
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'green', char: '#' }) 
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: "!" })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'green', char: unescape("%u2302") }) 
     }
   marker =! marker
   screen.render()
@@ -160,19 +165,22 @@ function run_panic() {
   // Secure Facilities
   // Secure facilities 
   var marker = true
-  secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: '#' }) 
   clearInterval(secure_facilitiesInterval)
   secure_facilitiesInterval = setInterval(function() {
     if (marker) {
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: '#' })
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200" })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478" })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000" })
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: unescape("%u25A0") }) 
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: unescape("%u2302") })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: unescape("%u2302") }) 
     }
     else {
       secure_facilities.clearMarkers()
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'red', char: unescape("%u25A1") }) 
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: "!" })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'red', char: "!" }) 
     }
   marker =! marker
   screen.render()
