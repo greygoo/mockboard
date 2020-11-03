@@ -1,5 +1,5 @@
 var blessed = require('blessed')
-  , contrib = require('../src/blessed-contrib/index')
+  , contrib = require('../blessed-contrib/index')
 
 var screen = blessed.screen()
 screen.title = 'TSM Facility Status'
@@ -14,6 +14,10 @@ var grid = new contrib.grid({rows: 13, cols: 12, screen: screen})
 // basic variables
 var generator_count = ['01', '02', '03', 'XX']
 
+let logInterval;
+let generatorsInterval;
+let secure_facilitiesInterval;
+let energy_consumptionInterval;
 
 /////////////////////////////////////////////////////////////////
 // states
@@ -49,7 +53,8 @@ function run_stable() {
 
 
   // Log
-  logLnterval = setInterval(function() {
+  clearInterval(logInterval);
+  logInterval = setInterval(function() {
     var rnd = Math.round(Math.random()*2)
     if (rnd==0) log.log('check ok ')   
     else if (rnd==1) log.log('balancing')
@@ -77,7 +82,27 @@ function run_stable() {
   }
 
   fillGenerators()
-  generatorInterval = setInterval(fillGenerators, 2000)
+  clearInterval(generatorsInterval)
+  generatorsInterval = setInterval(fillGenerators, 2000)
+
+
+  // Secure facilities 
+  var marker = true
+  clearInterval(secure_facilitiesInterval)
+  secure_facilitiesInterval = setInterval(function() {
+    if (marker) {
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: '#' })
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200" })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478" })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000" })
+    }
+    else {
+      secure_facilities.clearMarkers()
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'green', char: '#' }) 
+    }
+  marker =! marker
+  screen.render()
+  }, 200)
 
 
   // Energy consumption
@@ -91,31 +116,6 @@ function run_stable() {
     line.setData(mockData)
   }
 
-
-  // Secure facilities 
-  var marker = true
-  secure_facilitiesInterval = setInterval(function() {
-    if (marker) {
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: '#' })
-      if ( panic ){
-        secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: '#' })
-      }
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200" })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478" })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000" })
-    }
-    else {
-      secure_facilities.clearMarkers()
-      if ( ! panic ) {
-        secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'green', char: '#' })
-      }
-    }
-  marker =! marker
-  screen.render()
-  }, 200)
-
-
-  // Energy consumption
   var transactionsData = {
 	     	  title: 'Containment',
 	     	  style: {line: 'red'},
@@ -131,6 +131,7 @@ function run_stable() {
   }
   setLineData([transactionsData, transactionsData1], energy_consumption)
 
+  clearInterval(energy_consumptionInterval)
   energy_consumptionInterval = setInterval(function() {
     setLineData([transactionsData, transactionsData1], energy_consumption)
     screen.render()
@@ -143,8 +144,39 @@ function run_warning() {
   
 }
 
-function panic() {
-  
+function run_panic() {
+  // LCD
+  lcd.setOptions({
+    color: 'red',
+  });
+  lcd.setDisplay(' PANIC NOW');
+
+  // Generators	
+  clearInterval(generatorsInterval);
+  let generator_overload = [100,100,100,0]
+  generators.setData({titles: generator_count, data: generator_overload})
+  panic = true
+
+  // Secure Facilities
+  // Secure facilities 
+  var marker = true
+  secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: '#' }) 
+  clearInterval(secure_facilitiesInterval)
+  secure_facilitiesInterval = setInterval(function() {
+    if (marker) {
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: '#' })
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200" })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478" })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000" })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: unescape("%u25A0") }) 
+    }
+    else {
+      secure_facilities.clearMarkers()
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'red', char: unescape("%u25A1") }) 
+    }
+  marker =! marker
+  screen.render()
+  }, 200)
 }
 
 
@@ -242,14 +274,13 @@ screen.key(['s'], function(ch, key) {
 
 // panic = "p"
 screen.key(['p'], function(ch, key) {
-  lcd.setOptions({
-    color: 'red',
-  });
-  lcd.setDisplay(' PANIC NOW');
-  clearInterval(barInterval);
-  let generator_overload = [100,100,100,0]
-  generators.setData({titles: generator_count, data: generator_overload})
-  panic = true
+  stable = false;
+  warning = false;
+  panic = true;
+  fixing = false;
+  emergency = false;
+
+  run_panic();
 });
 
 
