@@ -146,8 +146,82 @@ function run_stable() {
 
 
 function run_warning() {
+  clearInterval(logInterval);
   
+
+  // Generators
+  let counter = 1;
+  let generatorsList = [[78,12,11,0],
+		      [81,13,11,0],
+		      [84,30,12,0],
+		      [90,45,15,0],
+		      [97,67,20,0],
+		      [100,81,19,0],
+		      [100,89,13,0],
+		      [100,95,12,0],
+		      [100,99,11,0],
+		      [100,100,30,0],
+		      [100,100,52,0],
+		      [100,100,67,0],
+		      [100,100,82,0],
+		      [100,100,93,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+	    	      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0],
+		      [100,100,100,0]]
+  let logList = ["check err",
+			"balancing",
+			"check err",
+			"check err",
+			"balancing",
+			"g1 load!!",
+			"balancing",
+			"g1 load!!",
+			"balancing",
+			"g2 load!",
+			"g1 load!",
+			"WARNING!",
+			"g1 load!",
+			"g2 load!",
+			"g3 load!",
+			"OVERLOAD!",
+			"! ALERT !",
+			"OVERLOAD!",
+			"! ALERT !",
+			"OVERLOAD!",
+			"! ALERT !",
+			"OVERLOAD!",
+			"! ALERT !",
+			"OVERLOAD!",
+			"! ALERT !",
+			"OVERLOAD!",
+			"! ALERT !"]
+
+
+
+  clearInterval(generatorsInterval);
+  generatorsInterval = setInterval(function() {
+    if ( counter >= generatorsList.length) {
+      generators.setData({titles: generator_count, data: [100,100,100,0]}); 
+      log.log("OVERLOAD !");
+    }
+    else {
+      generators.setData({titles: generator_count, data: generatorsList[counter]}); 
+      log.log(logList[counter]);
+    }
+    counter++
+  }, 2000);
 }
+
 
 function run_panic() {
   // LCD
@@ -277,6 +351,18 @@ screen.key(['s'], function(ch, key) {
   emergency = false;
 
   run_stable();
+});
+
+
+// stable = "w"
+screen.key(['w'], function(ch, key) {
+  stable = false;
+  warning = true;
+  panic = false;
+  fixing = false;
+  emergency = false;
+
+  run_warning();
 });
 
 
