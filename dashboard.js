@@ -14,6 +14,9 @@ var grid = new contrib.grid({rows: 13, cols: 12, screen: screen})
 // basic variables
 var generator_count = ['01', '02', '03', 'XX']
 
+let marker = true;
+let LCDon = true;
+
 let logInterval;
 let generatorsInterval;
 let secure_facilitiesInterval;
@@ -30,27 +33,99 @@ emergency = false;
 
 
 /////////////////////////////////////////////////////////////////
+// functions
+
+function addMarkers(color1, color2, marker1, marker2, interval) {
+  // Secure facilities 
+  clearInterval(secure_facilitiesInterval)
+  marker =! marker
+  secure_facilitiesInterval = setInterval(function() {
+    if (marker) {
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u0058") })
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: unescape("%u2302") })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: color1, char: marker1 }) 
+    }
+    else {
+      secure_facilities.clearMarkers()
+      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u00D7") })
+      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: "!" })
+      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: color2, char: marker2 }) 
+    }
+    marker =! marker
+    screen.render()
+  }, interval)
+}
+
+
+function blinkLCD(color1,color2,message1,message2,interval) {
+  if (typeof LCDblinkInterval !== 'undefined') { clearInterval(LCDblinkInterval) };
+  LCDon =! LCDon
+  LCDblinkInterval = setInterval(function() {
+    if(LCDon) {
+      lcd.setOptions({
+        color: color1,
+      });
+      lcd.setDisplay(message1);
+    }
+    else {
+      lcd.setOptions({
+        color: color2,
+      });
+      lcd.setDisplay(message2);
+    }
+    LCDon =! LCDon
+    screen.render()
+  }, interval)
+}
+
+
+function setContainment(color, label, value) {
+  containment.update([{label: label, percent: value, color: color}]);
+  screen.render();
+}
+
+
+function setGenerators(mask) {
+  var arr = []
+  for (var i=0; i<generator_count.length; i++) {
+    value = Math.floor(Math.random() * 40) + 30
+    arr.push(value)
+  }
+  for (var i=0; i<generator_count.length; i++) {
+    if(mask[i] != 'x') {
+      arr.splice(i, 1, mask[i]);
+    }
+  }
+  generators.setData({titles: generator_count, data: arr})
+}
+
+
+function setLoad(data, category, stackedCategory) {
+  load.setData(
+    { barCategory: category,
+      stackedCategory: stackedCategory,
+      data:
+        [ data ] 
+    })
+}
+
+
+/////////////////////////////////////////////////////////////////
 // state functions
 
 
 // stable mode
 function run_stable() {
-  
-  // LCD output
-  lcd.setOptions({
-    color: 'green',
-  });
-  lcd.setDisplay('DON.T PANIC');
-
 
   // Load
-  load.setData(
-    { barCategory: ['Dist'],
-    stackedCategory: ["C", "S", "X"],
-    data:
-      [ [ 3, 2, 1 ] ] 
-  })
-
+  setLoad([3,1,2], ['Dist'], ['C','S','X']);
+  
+  // LCD output
+  blinkLCD("blue","blue","DON'T PANIC", "DON'T PANIC", 500);
 
   // Log
   clearInterval(logInterval);
@@ -63,52 +138,13 @@ function run_stable() {
 
 
   // Generators
-  function fillGenerators() {
-    var arr = []
-    for (var i=0; i<generator_count.length; i++) {
-      if (i == 0) {
-        value = Math.floor(Math.random() * 10) + 80
-        arr.push(value)
-      }
-      else if (i == 3) {
-        arr.push(0)
-      }
-      else {
-        value = Math.floor(Math.random() * 40) + 30
-        arr.push(value)
-      }
-    }
-  generators.setData({titles: generator_count, data: arr})
-  }
-
-  fillGenerators()
-  clearInterval(generatorsInterval)
-  generatorsInterval = setInterval(fillGenerators, 2000)
+  setGenerators(['x','x','x','0']);
+  clearInterval(generatorsInterval);
+  generatorsInterval = setInterval(() => setGenerators(['x','x','x','0']), 2000);
 
 
   // Secure facilities 
-  var marker = true
-  clearInterval(secure_facilitiesInterval)
-  secure_facilitiesInterval = setInterval(function() {
-    if (marker) {
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u0058") })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u0058") })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u0058") })
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: unescape("%u2302") })
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'blue', char: unescape("%u2302") }) 
-    }
-    else {
-      secure_facilities.clearMarkers()
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u00D7") })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u00D7") })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u00D7") })
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: "!" })
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'green', char: unescape("%u2302") }) 
-    }
-  marker =! marker
-  screen.render()
-  }, 200)
-
+  addMarkers("blue", "green", unescape("%u2302"), unescape("%u2302"), 200);
 
   // Energy consumption
   function setLineData(mockData, line) {
@@ -150,7 +186,7 @@ function run_warning() {
   
 
   // Generators
-  let counter = 1;
+  let counter = 0;
   let generatorsList = [[78,12,11,0],
 		      [81,13,11,0],
 		      [84,30,12,0],
@@ -209,15 +245,48 @@ function run_warning() {
 
 
   clearInterval(generatorsInterval);
+  counter = 0;
   generatorsInterval = setInterval(function() {
     if ( counter >= generatorsList.length) {
-      generators.setData({titles: generator_count, data: [100,100,100,0]}); 
+      //generators.setData({titles: generator_count, data: [100,100,100,0]}); 
+      setGenerators(['100','100','100','0']);
       log.log("OVERLOAD !");
+      setContainment('red', 'Strength', 20); 
+      setLoad([10,0,0], ['Dist'], ['C','S','X']);
     }
     else {
-      generators.setData({titles: generator_count, data: generatorsList[counter]}); 
+      //generators.setData({titles: generator_count, data: generatorsList[counter]}); 
+      setGenerators(generatorsList[counter]);
       log.log(logList[counter]);
     }
+
+    if ( counter == 3 ) {
+      addMarkers("green","blue", unescape("%u2302"), '!',200);
+      generators.options.barBgColor = "blue";
+      blinkLCD("green","blue","    ERROR  ", "  ERROR  ", 500);
+      setContainment('blue', 'Strength', 70); 
+      setLoad([5,1,1], ['Dist'], ['C','S','X']);
+    }
+    
+
+    if ( counter == 10 ) {
+      addMarkers("blue","yellow", unescape("%u2302"), '!', 200);
+      blinkLCD("blue","yellow","   WARNING ", " WARNING  ", 500);
+      generators.options.barBgColor = "yellow";
+      generators.options.barFgColor = "black";
+      setContainment('yellow', 'Strength', 54); 
+      setLoad([8,0,1], ['Dist'], ['C','S','X']);
+    }
+
+    if ( counter == 14 ) { 
+      addMarkers("yellow","white", unescape("%u2302"), '!', 200);
+      blinkLCD("yellow","white","   ALERT  ", "   ALERT  ", 400);
+      generators.options.barBgColor = "red";
+      generators.options.barFgColor = "black";
+      setContainment('yellow', 'Strength', 34); 
+      setLoad([9,0,0], ['Dist'], ['C','S','X']);
+    }
+
     counter++
   }, 2000);
 }
@@ -225,40 +294,20 @@ function run_warning() {
 
 function run_panic() {
   // LCD
-  lcd.setOptions({
-    color: 'red',
-  });
-  lcd.setDisplay(' PANIC NOW');
+  blinkLCD("red","red"," PANIC  ", "      NOW", 300);
 
   // Generators	
   clearInterval(generatorsInterval);
   let generator_overload = [100,100,100,0]
+  generators.options.barBgColor = "red";
   generators.setData({titles: generator_count, data: generator_overload})
   panic = true
-
-  // Secure Facilities
+	
   // Secure facilities 
-  var marker = true
-  clearInterval(secure_facilitiesInterval)
-  secure_facilitiesInterval = setInterval(function() {
-    if (marker) {
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u0058") })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u0058") })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u0058") })
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: unescape("%u2302") })
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'yellow', char: unescape("%u2302") }) 
-    }
-    else {
-      secure_facilities.clearMarkers()
-      secure_facilities.addMarker({"lon" : "-122.6819", "lat" : "45.5200", char: unescape("%u00D7") })
-      secure_facilities.addMarker({"lon" : "-6.2597", "lat" : "53.3478", char: unescape("%u00D7") })
-      secure_facilities.addMarker({"lon" : "103.8000", "lat" : "1.3000", char: unescape("%u00D7") })
-      secure_facilities.addMarker({"lon" : "-79.0000", "lat" : "37.5000", color: 'yellow', char: "!" })
-      secure_facilities.addMarker({"lon" : "69.004165", "lat" : "-49.288385", color: 'red', char: "!" }) 
-    }
-  marker =! marker
-  screen.render()
-  }, 200)
+  addMarkers("yellow","red", unescape("%u2302"), '!', 200);
+
+  // Containment
+  setContainment('red', 'Strength', 0); 
 }
 
 
@@ -274,7 +323,7 @@ var containment = grid.set(5, 7, 5, 3, contrib.donut,
   arcWidth: 4,
   yPadding: 1,
   spacing: 0,
-  data: [{label: 'Strength', percent: 87}]
+  data: [{label: 'Strength', percent: 87, color: 'blue'}]
 })
 
 
@@ -287,7 +336,8 @@ var load = grid.set(5, 10, 5, 2, contrib.stackedBar,
   xOffset: 1,
   height: "100%",
   width: "50%",
-  barBgColor: [ 'red', 'blue', 'green' ]
+  barBgColor: [ 'red', 'blue', 'green' ],
+  barFgColor: [ 'black','black','black']
 })
 
 
@@ -401,4 +451,5 @@ screen.on('resize', function() {
   log.emit('attach');
 });
 
+run_stable()
 screen.render()
